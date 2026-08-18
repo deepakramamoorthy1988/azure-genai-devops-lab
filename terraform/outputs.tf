@@ -31,3 +31,12 @@ output "app_subnet_id" {
   description = "Resource ID of the application subnet"
   value       = azurerm_subnet.app.id
 }
+output "key_vault_name" {
+  description = "Name of the Azure Key Vault"
+  value       = azurerm_key_vault.lab.name
+}
+
+output "key_vault_id" {
+  description = "Resource ID of the Azure Key Vault"
+  value       = azurerm_key_vault.lab.id
+}

@@ -49,3 +49,8 @@ variable "app_nsg_name" {
   type        = string
   default     = "nsg-app"
 }
+variable "key_vault_name_prefix" {
+  description = "Prefix for the Azure Key Vault name"
+  type        = string
+  default     = "kv-genai-devops"
+}
