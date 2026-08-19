@@ -1,40 +1,53 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: genai-devops-app
   namespace: default
   labels:
-    app: genai-devops-app
+    app.kubernetes.io/instance: genai-devops-app
+    app.kubernetes.io/name: genai-devops-app
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
-      app: genai-devops-app
+      app.kubernetes.io/instance: genai-devops-app
+      app.kubernetes.io/name: genai-devops-app
+
   template:
     metadata:
       labels:
-        app: genai-devops-app
+        app.kubernetes.io/instance: genai-devops-app
+        app.kubernetes.io/name: genai-devops-app
+
     spec:
       containers:
         - name: genai-devops-app
           image: acrgenaidevops.azurecr.io/genai-devops-app:1.0
+
           ports:
             - containerPort: 5000
+
           env:
             - name: ENVIRONMENT
               value: "aks"
+
           readinessProbe:
             httpGet:
               path: /health
               port: 5000
             initialDelaySeconds: 5
             periodSeconds: 10
+
           livenessProbe:
             httpGet:
               path: /health
               port: 5000
             initialDelaySeconds: 15
             periodSeconds: 20
+
           resources:
             requests:
               cpu: "100m"
