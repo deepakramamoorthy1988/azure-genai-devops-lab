@@ -7,18 +7,29 @@ pool:
 variables:
   imageRepository: 'genai-devops-app'
   dockerfilePath: 'app/Dockerfile'
+
+  # ACR service connection
   azureServiceConnection: 'acr-connection'
   acrName: 'acrgenaidevops'
   acrLoginServer: 'acrgenaidevops.azurecr.io'
 
+  # AKS details
+  aksServiceConnection: 'aks-connection'
+  aksResourceGroup: 'rg-genai-devops-lab'
+  aksCluster: 'aks-genai-devops'
+
 stages:
 
+# ============================================================
+# STAGE 1 - BUILD AND PUSH
+# ============================================================
+
 - stage: Build
-  displayName: Build and Test
+  displayName: 'Build and Test'
 
   jobs:
   - job: Build
-    displayName: Build Application
+    displayName: 'Build Application'
 
     steps:
 
@@ -38,10 +49,12 @@ stages:
         python -m compileall app
       displayName: 'Validate Python application'
 
+    # Build Docker image
     - script: |
         docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath) app
       displayName: 'Build Docker image'
 
+    # Push Docker image to ACR
     - task: AzureCLI@2
       displayName: 'Login and Push Docker image to ACR'
       inputs:
@@ -50,5 +63,75 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           az acr login --name $(acrName)
-          docker tag $(imageRepository):$(Build.BuildId) $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
-          docker push $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
+
+          docker tag \
+            $(imageRepository):$(Build.BuildId) \
+            $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
+
+          docker push \
+            $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
+
+
+# ============================================================
+# STAGE 2 - DEPLOY TO AKS
+# ============================================================
+
+- stage: Deploy
+  displayName: 'Deploy to AKS'
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy Application to AKS'
+
+    steps:
+
+    - checkout: self
+
+    - task: KubernetesManifest@1
+      displayName: 'Deploy application to AKS'
+      inputs:
+        action: deploy
+        connectionType: 'azureResourceManager'
+        azureSubscriptionConnection: $(aksServiceConnection)
+        azureResourceGroup: $(aksResourceGroup)
+        kubernetesCluster: $(aksCluster)
+        namespace: 'default'
+        manifests: |
+          k8s/deployment.yaml
+          k8s/service.yaml
+        containers: |
+          $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
+
+    - task: AzureCLI@2
+      displayName: 'Verify AKS deployment'
+      inputs:
+        azureSubscription: $(aksServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az aks get-credentials \
+            --resource-group $(aksResourceGroup) \
+            --name $(aksCluster) \
+            --overwrite-existing
+
+          echo "======================================"
+          echo "Kubernetes Pods"
+          echo "======================================"
+          kubectl get pods -o wide
+
+          echo "======================================"
+          echo "Kubernetes Deployment"
+          echo "======================================"
+          kubectl get deployment genai-devops-app
+
+          echo "======================================"
+          echo "Kubernetes Service"
+          echo "======================================"
+          kubectl get service genai-devops-app
+
+          echo "======================================"
+          echo "Rollout Status"
+          echo "======================================"
+          kubectl rollout status deployment/genai-devops-app --timeout=180s
