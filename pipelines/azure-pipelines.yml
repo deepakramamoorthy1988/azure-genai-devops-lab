@@ -36,5 +36,5 @@ stages:
       displayName: 'Validate Python application'
 
     - script: |
-        docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath) .
+        docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath)
       displayName: 'Build Docker image'
