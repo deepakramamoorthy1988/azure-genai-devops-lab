@@ -39,7 +39,7 @@ stages:
       displayName: 'Validate Python application'
 
     - script: |
-        docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath) .
+        docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath) app
       displayName: 'Build Docker image'
 
     - task: AzureCLI@2
