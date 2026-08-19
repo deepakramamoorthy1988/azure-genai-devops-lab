@@ -7,6 +7,9 @@ pool:
 variables:
   imageRepository: 'genai-devops-app'
   dockerfilePath: 'app/Dockerfile'
+  azureServiceConnection: 'acr-connection'
+  acrName: 'acrgenaidevops'
+  acrLoginServer: 'acrgenaidevops.azurecr.io'
 
 stages:
 
@@ -36,5 +39,16 @@ stages:
       displayName: 'Validate Python application'
 
     - script: |
-        docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath) app
+        docker build -t $(imageRepository):$(Build.BuildId) -f $(dockerfilePath) .
       displayName: 'Build Docker image'
+
+    - task: AzureCLI@2
+      displayName: 'Login and Push Docker image to ACR'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az acr login --name $(acrName)
+          docker tag $(imageRepository):$(Build.BuildId) $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
+          docker push $(acrLoginServer)/$(imageRepository):$(Build.BuildId)
