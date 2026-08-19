@@ -54,3 +54,19 @@ variable "key_vault_name_prefix" {
   type        = string
   default     = "kv-genai-devops"
 }
+variable "aks_name" {
+  description = "AKS cluster name"
+  type        = string
+  default     = "aks-genai-devops"
+}
+
+variable "aks_dns_prefix" {
+  description = "AKS DNS prefix"
+  type        = string
+  default     = "aks-genai-devops"
+}
+variable "acr_name" {
+  description = "Azure Container Registry name"
+  type        = string
+  default     = "acrgenaidevops"
+}

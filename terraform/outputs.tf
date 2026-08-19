@@ -40,3 +40,12 @@ output "key_vault_id" {
   description = "Resource ID of the Azure Key Vault"
   value       = azurerm_key_vault.lab.id
 }
+output "acr_name" {
+  description = "Azure Container Registry name"
+  value       = azurerm_container_registry.acr.name
+}
+
+output "acr_login_server" {
+  description = "Azure Container Registry login server"
+  value       = azurerm_container_registry.acr.login_server
+}

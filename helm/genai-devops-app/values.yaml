@@ -1,0 +1,41 @@
+replicaCount: 1
+
+image:
+  repository: acrgenaidevops.azurecr.io/genai-devops-app
+  pullPolicy: IfNotPresent
+  tag: "1.0"
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: "genai-devops-app"
+
+serviceAccount:
+  create: false
+  automount: false
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 5000
+
+env:
+  ENVIRONMENT: aks

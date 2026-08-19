@@ -1,0 +1,32 @@
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/crash.log
+**/crash.*.log
+**/*.tfvars
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+.venv/
+venv/
+env/
+
+# Docker
+**/.docker/
+
+# Kubernetes
+*.secret.yaml
+*.secret.yml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

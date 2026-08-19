@@ -103,3 +103,52 @@ resource "azurerm_role_assignment" "key_vault_secrets_officer" {
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+resource "azurerm_kubernetes_cluster" "aks" {
+  name                = var.aks_name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.lab.name
+  dns_prefix          = var.aks_dns_prefix
+
+  default_node_pool {
+    name           = "system"
+    node_count     = 1
+    vm_size        = "Standard_D2s_v3"
+    vnet_subnet_id = azurerm_subnet.aks.id
+
+    upgrade_settings {
+      max_surge = "10%"
+    }
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  network_profile {
+    network_plugin    = "azure"
+    load_balancer_sku = "standard"
+  }
+
+  tags = {
+    environment = "lab"
+    project     = "genai-devops"
+  }
+}
+resource "azurerm_container_registry" "acr" {
+  name                = var.acr_name
+  resource_group_name = azurerm_resource_group.lab.name
+  location            = var.location
+  sku                 = "Basic"
+
+  admin_enabled = false
+
+  tags = {
+    environment = "lab"
+    project     = "genai-devops"
+  }
+}
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+}
